@@ -1,0 +1,34 @@
+{
+  "name": "jregexp",
+  "description": "Regexp engine based on jcon.",
+  "version": "0.0.1",
+  "homepage": "https://github.com/takumi4ichi",
+  "author": {
+    "name": "takumi4ichi",
+    "email": "takumi4ichi@gmail.com"
+  },
+  "main": "./src/jregexp.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:takumi4ichi/jregexp.git"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "/blob/master/LICENSE"
+    }
+  ],
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0"
+  },
+  "dependencies": {},
+  "keywords": [
+    "lib",
+    "regexp",
+    "javascript",
+    "parser"
+  ]
+}
