@@ -1,6 +1,6 @@
 var jregexp = require('./src/jregexp.js');
 
-console.log( JSON.stringify(jregexp.parse('a[abA-Z]').ast(), null, ' ') );
+console.log( JSON.stringify(jregexp.parse('a[abA-Z](a|b)').ast(), null, ' ') );
 
 /*
 var jcon = require('jcon');

@@ -20,6 +20,7 @@ var jregexp = (function(){
         jcon.string('+'),       //正闭包
         jcon.string('?'),       //零或一次
         jcon.string('.'),       //any char
+        jcon.string('|'),       //any char
         jcon.string('{'),       //指定次数闭包
         jcon.string('}'),       //指定次数闭包
         jcon.string('['),       //range start chr
@@ -89,9 +90,12 @@ var jregexp = (function(){
     var concatenation = basicRe.least(1).setAst('concatenation');
 
     var union = jcon.lazy(function(){
-        return jcon.seq(
+        return jcon.or(
             concatenation,
-            unionRest
+            jcon.seq(
+                concatenation,
+                unionRest
+            ).setAst('union')
         );
     });
     var unionRest = jcon.or(
