@@ -60,13 +60,43 @@ var jregexp = (function(){
 
     var eos = jcon.string('$');
     var any = jcon.string('.');
-    var group = jcon.seq(
-        jcon.string('('),
-        jcon.lazy(function(){
-            return union;
-        }),
-        jcon.string(')')
+
+
+    var group = jcon.or(
+        jcon.seq(
+            jcon.string('('),
+            jcon.lazy(function(){
+                return alter;
+            }),
+            jcon.string(')')
+        ).setAst('group'),
+
+        jcon.seq(
+            jcon.string('(?:'),
+            jcon.lazy(function(){
+                return alter;
+            }),
+            jcon.string(')')
+        ),
+
+        jcon.seq(
+            jcon.string('(?='),
+            jcon.lazy(function(){
+                return alter;
+            }),
+            jcon.string(')')
+        ).setAst('positive-group'),
+
+        jcon.seq(
+            jcon.string('(?!'),
+            jcon.lazy(function(){
+                return alter;
+            }),
+            jcon.string(')')
+        ).setAst('negative-group')
     );
+
+
     var reElementary = jcon.or(
         group,
         any,
@@ -77,36 +107,39 @@ var jregexp = (function(){
     var plus = jcon.seq(
         reElementary,
         jcon.string('+')
-    );
+    ).setAst('plus');
     var star = jcon.seq(
         reElementary,
         jcon.string('*')
-    );
+    ).setAst('star');
     var basicRe = jcon.or(
         star,
         plus,
         reElementary
     );
-    var concatenation = basicRe.least(1).setAst('concatenation');
+    var concatenation = jcon.or(
+        basicRe,
+        basicRe.least(2).setAst('concatenation')
+    );
 
-    var union = jcon.lazy(function(){
+    var alter = jcon.lazy(function(){
         return jcon.or(
             concatenation,
             jcon.seq(
                 concatenation,
-                unionRest
-            ).setAst('union')
+                alterRest
+            ).setAst('alter')
         );
     });
-    var unionRest = jcon.or(
+    var alterRest = jcon.or(
         epsilon,
         jcon.seq(
             jcon.string('|'),
-            union
+            alter
         )
     );
 
-    var re = union;
+    var re = alter;
 
     return re;
 
