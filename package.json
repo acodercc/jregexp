@@ -1,6 +1,6 @@
 {
   "name": "jregexp",
-  "description": "Regexp engine based on jcon.",
+  "description": "Regexp parser based on jcon.",
   "version": "0.0.1",
   "homepage": "https://github.com/takumi4ichi",
   "author": {
@@ -24,7 +24,9 @@
   "devDependencies": {
     "gulp": "^3.9.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "jcon": "^0.3.1"
+  },
   "keywords": [
     "lib",
     "regexp",
