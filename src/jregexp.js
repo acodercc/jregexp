@@ -12,6 +12,7 @@ var jregexp = (function(){
 
     var epsilon = jcon.string('');
 
+    var chr = jcon.regex(/[\u0001-\uffff]/);
     var metaChr = jcon.or(
         jcon.string('\\'),
         jcon.string('^'),       //起始符
@@ -31,7 +32,7 @@ var jregexp = (function(){
 
     var nonMetaChr = jcon.or(
         jcon.not(metaChr).setAst('chr'),
-        jcon.seq(jcon.string('\\'), metaChr.setAst('chr'))
+        jcon.seq(jcon.string('\\'), chr).setAst('transfer')
     );
 
     var range = jcon.seq(
@@ -58,8 +59,8 @@ var jregexp = (function(){
 
     var set = jcon.or(negativeSet, positiveSet);
 
-    var eos = jcon.string('$');
-    var any = jcon.string('.');
+    var eos = jcon.string('$').setAst('eos');
+    var any = jcon.string('.').setAst('any');
 
 
     var group = jcon.or(
