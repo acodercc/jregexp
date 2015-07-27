@@ -140,8 +140,73 @@ var jregexp = (function(){
         ).setAst('maching_list')
     );
 
-    return bracket_expression;
+    /* bracket-expression defined */
 
+
+    var RegularExpressionChar = jcon.or(
+        jcon.and(
+            RegularExpressionNonTerminator,
+            jcon.not(
+                jcon.or(
+                    jcon.string('\\'),
+                    jcon.string('/'),
+                    jcon.string('[')
+                )
+            )
+        ),
+        backslashSequence,
+        bracket_expression
+    );
+
+
+    var RegularExpressionFirstChar = jcon.or(
+        jcon.and(
+            RegularExpressionNonTerminator,
+            jcon.not(
+                jcon.or(
+                    jcon.string('*'),
+                    jcon.string('\\'),
+                    jcon.string('/'),
+                    jcon.string('[')
+                )
+            )
+        ),
+        backslashSequence,
+        bracket_expression
+    );
+
+    var RegularExpressionChars = RegularExpressionChar.many();
+
+    var RegularExpressionBody = jcon.seq(
+        RegularExpressionFirstChar,
+        RegularExpressionChars
+    );
+
+    var RE_dupl_symbol = jcon.or(
+        jcon.string('*'),
+        jcon.seq(
+            jcon.string('{'),
+            DUP_COUNT,
+            jcon.string('}')
+        ),
+        jcon.seq(
+            jcon.string('{'),
+            DUP_COUNT,
+            jcon.string(',')
+            jcon.string('}')
+        ),
+        jcon.seq(
+            jcon.string('{'),
+            DUP_COUNT,
+            jcon.string(',')
+            DUP_COUNT,
+            jcon.string('}')
+        ),
+    );
+
+
+
+    return RegularExpressionBody;
 
 })();
 (function(identifier, mod){
