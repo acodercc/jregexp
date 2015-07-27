@@ -3,7 +3,7 @@
  * jregexp
  *
  * refs:
- * http://www.cs.sfu.ca/~cameron/Teaching/384/99-3/regexp-plg.html
+ * http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html
  *
  */
 var jregexp = (function(){
@@ -12,140 +12,86 @@ var jregexp = (function(){
 
     var epsilon = jcon.string('');
 
-    var chr = jcon.regex(/[\u0001-\uffff]/);
-    var metaChr = jcon.or(
-        jcon.string('\\'),
-        jcon.string('^'),       //起始符
-        jcon.string('$'),       //终止符
-        jcon.string('*'),       //科林闭包
-        jcon.string('+'),       //正闭包
-        jcon.string('?'),       //零或一次
-        jcon.string('.'),       //any char
-        jcon.string('|'),       //any char
-        jcon.string('{'),       //指定次数闭包
-        jcon.string('}'),       //指定次数闭包
-        jcon.string('['),       //range start chr
-        jcon.string(']'),       //range end chr
-        jcon.string('('),       //group start chr
-        jcon.string(')')        //group end chr
+    var META_CHAR = jcon.or(
+        //jcon.string('^'),
+        //jcon.string('-'),
+        jcon.string(']')
     );
-
-    var nonMetaChr = jcon.or(
-        jcon.not(metaChr).setAst('chr'),
-        jcon.seq(jcon.string('\\'), chr).setAst('transfer')
+    var COLL_ELEM_SINGLE = jcon.and(
+        jcon.regex(/[\u0000-\u00ff]/),
+        jcon.not(META_CHAR)
     );
-
-    var range = jcon.seq(
-        nonMetaChr.setAst('range-start'),
-        jcon.string('-'),
-        nonMetaChr.setAst('range-end')
-    ).setAst('range');
-
-    var item = jcon.or(range, nonMetaChr);
-
-    var items = item.least(1);
-
-    var positiveSet = jcon.seq(
+    var COLL_ELEM_MULTI = jcon.regex(/[\u00ff-\uffff]/);
+    var BACKREF = jcon.regex(/\\[0-9]/);
+    var DUP_COUNT = jcon.regex(/\d+/);
+    var L_ANCHOR = jcon.string('^');
+    var SPEC_CHAR = jcon.or(
+        jcon.string('^'),
+        jcon.string('.'),
         jcon.string('['),
-        items,
-        jcon.string(']')
-    ).setAst('positive-set');
+        jcon.string('$'),
+        jcon.string('('),
+        jcon.string(')'),
+        jcon.string('|'),
+        jcon.string('*'),
+        jcon.string('+'),
+        jcon.string('?'),
+        jcon.string('{'),
+        jcon.string('\\')
+    );
+    var ORD_CHAR = jcon.not(SPEC_CHAR);
+    var QUOTED_CHAR = jcon.seq(
+        jcon.string('\\'),
+        SPEC_CHAR
+    );
+    var R_ANCHOR = jcon.string('$');
 
-    var negativeSet = jcon.seq(
-        jcon.string('[^'),
-        items,
-        jcon.string(']')
-    ).setAst('negative-set');
-
-    var set = jcon.or(negativeSet, positiveSet);
-
-    var eos = jcon.string('$').setAst('eos');
-    var any = jcon.string('.').setAst('any');
+    var backOpenParen = jcon.string('(');
+    var backCloseParen = jcon.string(')');
+    var backOpenBrace = jcon.string('{');
+    var backCloseBrace = jcon.string('}');
 
 
-    var group = jcon.or(
+    var end_range = COLL_ELEM_SINGLE;
+    var start_range = jcon.seq(
+        end_range,
+        jcon.string('-')
+    );
+    var range_expression = jcon.seq(
+        start_range,
+        end_range
+    ).setAst('range_expression');
+    var single_expression = end_range;
+    var expression_term = jcon.or(single_expression.setAst('single'), range_expression.setAst('range'));
+
+    /*
+    var follow_list = jcon.or(expression_term, 
+        jcon.seq(follow_list, expression_term);     //左第归
+    */
+
+    var follow_list = expression_term.least(1);
+
+    var bracket_list = jcon.or(follow_list, 
+        jcon.seq(follow_list, jcon.string('-'))
+    );
+    
+    var bracket_expression = jcon.or(
         jcon.seq(
-            jcon.string('('),
-            jcon.lazy(function(){
-                return alter;
-            }),
-            jcon.string(')')
-        ).setAst('group'),
-
+            jcon.string('[^').skip(),
+            bracket_list,
+            jcon.string(']').skip()
+        ).setAst('nomaching_list'),
         jcon.seq(
-            jcon.string('(?:'),
-            jcon.lazy(function(){
-                return alter;
-            }),
-            jcon.string(')')
-        ),
-
-        jcon.seq(
-            jcon.string('(?='),
-            jcon.lazy(function(){
-                return alter;
-            }),
-            jcon.string(')')
-        ).setAst('positive-group'),
-
-        jcon.seq(
-            jcon.string('(?!'),
-            jcon.lazy(function(){
-                return alter;
-            }),
-            jcon.string(')')
-        ).setAst('negative-group')
+            jcon.string('[').skip(),
+            bracket_list,
+            jcon.string(']').skip()
+        ).setAst('maching_list')
     );
 
+    return bracket_expression;
 
-    var reElementary = jcon.or(
-        group,
-        any,
-        eos,
-        nonMetaChr,
-        set
-    );
-    var plus = jcon.seq(
-        reElementary,
-        jcon.string('+')
-    ).setAst('plus');
-    var star = jcon.seq(
-        reElementary,
-        jcon.string('*')
-    ).setAst('star');
-    var basicRe = jcon.or(
-        star,
-        plus,
-        reElementary
-    );
-    var concatenation = jcon.or(
-        basicRe,
-        basicRe.least(2).setAst('concatenation')
-    );
 
-    var alter = jcon.lazy(function(){
-        return jcon.or(
-            concatenation,
-            jcon.seq(
-                concatenation,
-                alterRest
-            ).setAst('alter')
-        );
-    });
-    var alterRest = jcon.or(
-        epsilon,
-        jcon.seq(
-            jcon.string('|'),
-            alter
-        )
-    );
-
-    var re = alter;
-
-    return re;
-
-}());
-
+})();
 (function(identifier, mod){
     var isAmd = typeof define === 'function',
     isCommonJs = typeof module === 'object' && !!module.exports;
