@@ -4,6 +4,7 @@
  *
  * refs:
  * http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html
+ * http://www.ecma-international.org/ecma-262/5.1/#sec-7.8.5
  *
  */
 var jregexp = (function(){
@@ -46,13 +47,44 @@ var jregexp = (function(){
     );
     var R_ANCHOR = jcon.string('$');
 
+    var backslashSequence = jcon.or(
+        jcon.string('\\w').setAst('word'),
+        jcon.string('\\W').setAst('non-word'),
+        jcon.string('\\d').setAst('digit'),
+        jcon.string('\\D').setAst('non-digit'),
+        jcon.string('\\s').setAst('white space'),
+        jcon.string('\\S').setAst('non-white space'),
+        jcon.seq(
+            jcon.string('\\'),
+            jcon.and(
+                jcon.regex(/[\u0000-\uffff]/),
+                jcon.not(
+                    jcon.or(
+                        jcon.regex(/\u000a/),
+                        jcon.regex(/\u000d/),
+                        jcon.regex(/\u2028/),
+                        jcon.regex(/\u2029/)
+                    )
+                )
+            ).setAst('char')
+        ),
+        jcon.seq(
+            jcon.string('\\u'),
+            jcon.regex(/\d{4}/)
+        ).setAst('unicode'),
+        jcon.seq(
+            jcon.string('\\x'),
+            jcon.regex(/\d{2}/)
+        ).setAst('hex')
+    );
+
     var backOpenParen = jcon.string('(');
     var backCloseParen = jcon.string(')');
     var backOpenBrace = jcon.string('{');
     var backCloseBrace = jcon.string('}');
 
 
-    var end_range = COLL_ELEM_SINGLE;
+    var end_range = jcon.or(COLL_ELEM_SINGLE.setAst('char'), backslashSequence);
     var start_range = jcon.seq(
         end_range,
         jcon.string('-')
@@ -62,12 +94,7 @@ var jregexp = (function(){
         end_range
     ).setAst('range_expression');
     var single_expression = end_range;
-    var expression_term = jcon.or(single_expression.setAst('single'), range_expression.setAst('range'));
-
-    /*
-    var follow_list = jcon.or(expression_term, 
-        jcon.seq(follow_list, expression_term);     //左第归
-    */
+    var expression_term = jcon.or(single_expression, range_expression.setAst('range'));
 
     var follow_list = expression_term.least(1);
 
