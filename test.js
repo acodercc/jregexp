@@ -14,6 +14,7 @@ parse('[^-b]');
 parse('[^-]');
 parse('[^a-b]');
 parse('[^a-bcd]');
+parse('[^[-]');
 
 //console.log(JSON.stringify(ptree, null, ' '));
 

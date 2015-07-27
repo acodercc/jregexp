@@ -22,7 +22,9 @@
     "node": ">= 0.8.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.0"
+    "gulp": "^3.9.0",
+    "mocha": "^2.2.4",
+    "chai": "^2.3.0"
   },
   "dependencies": {
     "jcon": "^0.3.2"
