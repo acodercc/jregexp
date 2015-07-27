@@ -13,14 +13,26 @@ var jregexp = (function(){
 
     var epsilon = jcon.string('');
 
-    var META_CHAR = jcon.or(
-        //jcon.string('^'),
-        //jcon.string('-'),
-        jcon.string(']')
+    //http://www.ecma-international.org/ecma-262/5.1/#sec-5.1.6
+    var SourceCharacter = jcon.regex(/[\u0000-\uffff]/);
+
+    //http://www.ecma-international.org/ecma-262/5.1/#sec-7.3
+    var LineTerminator = jcon.or(
+        jcon.regex(/\u000a/),
+        jcon.regex(/\u000d/),
+        jcon.regex(/\u2028/),
+        jcon.regex(/\u2029/)
     );
+
+    //http://www.ecma-international.org/ecma-262/5.1/#sec-7.8.5
+    var RegularExpressionNonTerminator = jcon.and(
+        SourceCharacter.setAst('char'),
+        jcon.not(LineTerminator)
+    );
+
     var COLL_ELEM_SINGLE = jcon.and(
         jcon.regex(/[\u0000-\u00ff]/),
-        jcon.not(META_CHAR)
+        jcon.not(jcon.string(']'))
     );
     var COLL_ELEM_MULTI = jcon.regex(/[\u00ff-\uffff]/);
     var BACKREF = jcon.regex(/\\[0-9]/);
@@ -84,7 +96,19 @@ var jregexp = (function(){
     var backCloseBrace = jcon.string('}');
 
 
-    var end_range = jcon.or(COLL_ELEM_SINGLE.setAst('char'), backslashSequence);
+    var RegularExpressionClassChar = jcon.or(
+        backslashSequence,
+        jcon.and(
+            RegularExpressionNonTerminator,
+            jcon.not(
+                jcon.or(
+                    jcon.string('\\'),
+                    jcon.string(']')
+                )
+            )
+        )
+    );
+    var end_range = RegularExpressionClassChar;
     var start_range = jcon.seq(
         end_range,
         jcon.string('-')
@@ -99,7 +123,8 @@ var jregexp = (function(){
     var follow_list = expression_term.least(1);
 
     var bracket_list = jcon.or(follow_list, 
-        jcon.seq(follow_list, jcon.string('-'))
+        jcon.seq(follow_list, jcon.string('-')),
+        jcon.string('')
     );
     
     var bracket_expression = jcon.or(
