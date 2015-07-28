@@ -183,30 +183,68 @@ var jregexp = (function(){
     );
 
     var RE_dupl_symbol = jcon.or(
-        jcon.string('*'),
+        jcon.string('*').setAst('dupl_many'),
         jcon.seq(
             jcon.string('{'),
-            DUP_COUNT,
+            DUP_COUNT.setAst('dupl_fixed'),
             jcon.string('}')
         ),
+        jcon.or(
+            jcon.seq(
+                jcon.string('{'),
+                DUP_COUNT.setAst('min'),
+                jcon.string(','),
+                jcon.string('}')
+            ),
+            jcon.seq(
+                jcon.string('{'),
+                DUP_COUNT.setAst('min'),
+                jcon.string(','),
+                DUP_COUNT.setAst('max'),
+                jcon.string('}')
+            )
+        ).setAst('dupl_range')
+    );
+
+    var one_char_or_elem_RE = jcon.or(
+        jcon.string('.').setAst('wildcard'),
+        RegularExpressionChar,
+        bracket_expression
+    );
+
+    var nondupl_RE = jcon.or(
+        one_char_or_elem_RE,
         jcon.seq(
-            jcon.string('{'),
-            DUP_COUNT,
-            jcon.string(',')
-            jcon.string('}')
+            jcon.string('('),
+            jcon.lazy(function(){
+                return RE_expression;
+            }),
+            jcon.string(')')
         ),
-        jcon.seq(
-            jcon.string('{'),
-            DUP_COUNT,
-            jcon.string(',')
-            DUP_COUNT,
-            jcon.string('}')
-        ),
+        BACKREF
+    );
+
+    var simple_RE = jcon.or(
+        nondupl_RE,
+        jcon.seq(nondupl_RE, RE_dupl_symbol)
+    );
+
+    var RE_expression = simple_RE.least(1);
+
+    var basic_reg_exp = jcon.or(
+        RE_expression,
+        L_ANCHOR,
+        R_ANCHOR,
+        jcon.seq(L_ANCHOR, R_ANCHOR),
+        jcon.seq(L_ANCHOR, RE_expression),
+        jcon.seq(RE_expression, R_ANCHOR),
+        jcon.seq(L_ANCHOR, RE_expression, R_ANCHOR)
     );
 
 
 
-    return RegularExpressionBody;
+
+    return basic_reg_exp;
 
 })();
 (function(identifier, mod){
