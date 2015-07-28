@@ -239,10 +239,7 @@ var jregexp = (function(){
         jcon.seq(L_ANCHOR, RE_expression),
         jcon.seq(RE_expression, R_ANCHOR),
         jcon.seq(L_ANCHOR, RE_expression, R_ANCHOR)
-    );
-
-
-
+    ).setAst('basic_RE');
 
     return basic_reg_exp;
 
