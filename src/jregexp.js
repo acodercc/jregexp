@@ -37,7 +37,7 @@ var jregexp = (function(){
     var COLL_ELEM_MULTI = jcon.regex(/[\u00ff-\uffff]/);
     var BACKREF = jcon.regex(/\\[0-9]/);
     var DUP_COUNT = jcon.regex(/\d+/);
-    var L_ANCHOR = jcon.string('^');
+    var L_ANCHOR = jcon.string('^').setAst('start-of-line');
     var SPEC_CHAR = jcon.or(
         jcon.string('^'),
         jcon.string('.'),
@@ -57,7 +57,7 @@ var jregexp = (function(){
         jcon.string('\\'),
         SPEC_CHAR
     );
-    var R_ANCHOR = jcon.string('$');
+    var R_ANCHOR = jcon.string('$').setAst('end-of-line');
 
     var backslashSequence = jcon.or(
         jcon.string('\\w').setAst('word'),
@@ -150,10 +150,12 @@ var jregexp = (function(){
                 jcon.or(
                     jcon.string('\\'),
                     jcon.string('/'),
-                    jcon.string('[')
+                    jcon.string('['),
+                    jcon.string('$')        //不可见到$
                 )
             )
         ),
+        jcon.string('$').lookhead(RegularExpressionNonTerminator).setAst('char'),      //但可以见到非行尾的$
         backslashSequence,
         bracket_expression
     );
@@ -232,13 +234,13 @@ var jregexp = (function(){
     var RE_expression = simple_RE.least(1);
 
     var basic_reg_exp = jcon.or(
-        RE_expression,
         L_ANCHOR,
         R_ANCHOR,
         jcon.seq(L_ANCHOR, R_ANCHOR),
         jcon.seq(L_ANCHOR, RE_expression),
+        jcon.seq(L_ANCHOR, RE_expression, R_ANCHOR),
         jcon.seq(RE_expression, R_ANCHOR),
-        jcon.seq(L_ANCHOR, RE_expression, R_ANCHOR)
+        RE_expression
     ).setAst('basic_RE');
 
     return basic_reg_exp;

@@ -11,4 +11,6 @@ describe('bracket', function(){
 
     jregexp.parse('.{1,2}[^\\d\\u0061-\\x65]*\\w{2}').ast()[0].should.contain.keys({'value': '.{1,2}[^\\d\\u0061-\\x65]*\\w{2}'}); 
 
+    jregexp.parse('^^$$').ast()[0].should.contain.keys({'value': '^^$$'}); 
+
 });
