@@ -52,7 +52,7 @@ var jregexp = (function(){
         jcon.string('{'),
         jcon.string('\\')
     );
-    var ORD_CHAR = jcon.not(SPEC_CHAR);
+    var ORD_CHAR = jcon.not(SPEC_CHAR).setAst('char');
     var QUOTED_CHAR = jcon.seq(
         jcon.string('\\'),
         SPEC_CHAR
@@ -148,14 +148,13 @@ var jregexp = (function(){
             RegularExpressionNonTerminator,
             jcon.not(
                 jcon.or(
+                    jcon.string('$'),           //$只能去匹配basic_reg_exp的rhs中的end-of-line
                     jcon.string('\\'),
                     jcon.string('/'),
-                    jcon.string('['),
-                    jcon.string('$')        //不可见到$
+                    jcon.string('[')
                 )
             )
         ),
-        jcon.string('$').lookhead(RegularExpressionNonTerminator).setAst('char'),      //但可以见到非行尾的$
         backslashSequence,
         bracket_expression
     );
@@ -184,11 +183,13 @@ var jregexp = (function(){
         RegularExpressionChars
     );
 
-    var RE_dupl_symbol = jcon.or(
-        jcon.string('*').setAst('dupl_many'),
+    var ERE_dupl_symbol = jcon.or(
+        jcon.string('*').setAst('dupl-many'),
+        jcon.string('+').setAst('dupl-one-more'),
+        jcon.string('?').setAst('dupl-possible'),
         jcon.seq(
             jcon.string('{'),
-            DUP_COUNT.setAst('dupl_fixed'),
+            DUP_COUNT.setAst('dupl-fixed'),
             jcon.string('}')
         ),
         jcon.or(
@@ -205,12 +206,13 @@ var jregexp = (function(){
                 DUP_COUNT.setAst('max'),
                 jcon.string('}')
             )
-        ).setAst('dupl_range')
+        ).setAst('dupl-range')
     );
 
     var one_char_or_elem_RE = jcon.or(
         jcon.string('.').setAst('wildcard'),
-        RegularExpressionChar,
+        //RegularExpressionChar,
+        ORD_CHAR,
         bracket_expression
     );
 
@@ -222,13 +224,37 @@ var jregexp = (function(){
                 return RE_expression;
             }),
             jcon.string(')')
-        ),
+        ).setAst('group-catch'),
+        jcon.seq(
+            jcon.string('(?='),
+            jcon.lazy(function(){
+                return extended_reg_exp;
+                return RE_expression;
+            }),
+            jcon.string(')')
+        ).setAst('group-positive'),
+        jcon.seq(
+            jcon.string('(?!'),
+            jcon.lazy(function(){
+                return extended_reg_exp;
+                return RE_expression;
+            }),
+            jcon.string(')')
+        ).setAst('group-negative'),
+        jcon.seq(
+            jcon.string('(?:'),
+            jcon.lazy(function(){
+                return extended_reg_exp;
+                return RE_expression;
+            }),
+            jcon.string(')')
+        ).setAst('group-non-catch'),
         BACKREF
     );
 
     var simple_RE = jcon.or(
         nondupl_RE,
-        jcon.seq(nondupl_RE, RE_dupl_symbol)
+        jcon.seq(nondupl_RE, ERE_dupl_symbol)
     );
 
     var RE_expression = simple_RE.least(1);
@@ -243,7 +269,18 @@ var jregexp = (function(){
         RE_expression
     ).setAst('basic_RE');
 
-    return basic_reg_exp;
+    var extended_reg_exp = jcon.or(
+        basic_reg_exp,
+        jcon.seq(
+            basic_reg_exp,
+            jcon.string('|'),
+            jcon.lazy(function(){
+                return extended_reg_exp;
+            })
+        ).setAst('alter')
+    ).setAst('extended_RE');
+
+    return extended_reg_exp;
 
 })();
 (function(identifier, mod){

@@ -19,7 +19,7 @@ parse('[^[-]');
 parse('[\\?]');
 parse('[\\u0061b]');
 */
-parse('^^$$');
+parse('^ab$|^(?=cd|ef)$');
 
 //console.log(JSON.stringify(ptree, null, ' '));
 

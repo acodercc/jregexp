@@ -4,7 +4,7 @@ var assert = require('assert');
 var chai = require('chai');
 var should = chai.should();
 
-describe('bracket', function(){
+describe('Bracket Expression', function(){
 
     var jregexp = require('../src/jregexp');
 
