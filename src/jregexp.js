@@ -211,8 +211,8 @@ var jregexp = (function(){
 
     var one_char_or_elem_RE = jcon.or(
         jcon.string('.').setAst('wildcard'),
-        //RegularExpressionChar,
-        ORD_CHAR,
+        RegularExpressionChar,
+        //ORD_CHAR,
         bracket_expression
     );
 
