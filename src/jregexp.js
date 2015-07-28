@@ -82,11 +82,11 @@ var jregexp = (function(){
         ),
         jcon.seq(
             jcon.string('\\u'),
-            jcon.regex(/\d{4}/)
+            jcon.regex(/[0-9a-fA-F]{4}/)
         ).setAst('unicode'),
         jcon.seq(
             jcon.string('\\x'),
-            jcon.regex(/\d{2}/)
+            jcon.regex(/[0-9a-fA-F]{2}/)
         ).setAst('hex')
     );
 
