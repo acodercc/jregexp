@@ -19,7 +19,8 @@ parse('[^[-]');
 parse('[\\?]');
 parse('[\\u0061b]');
 */
-parse('^a\\d$|^1[\\wa-z\\u0061-\\x71]$');
+
+parse('abc|def');
 
 //console.log(JSON.stringify(ptree, null, ' '));
 

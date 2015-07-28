@@ -147,12 +147,7 @@ var jregexp = (function(){
         jcon.and(
             RegularExpressionNonTerminator,
             jcon.not(
-                jcon.or(
-                    jcon.string('$'),           //$只能去匹配basic_reg_exp的rhs中的end-of-line
-                    jcon.string('\\'),
-                    jcon.string('/'),
-                    jcon.string('[')
-                )
+                SPEC_CHAR
             )
         ),
         backslashSequence,
