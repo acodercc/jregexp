@@ -1,16 +1,16 @@
 {
   "name": "jregexp",
   "description": "Regexp parser based on jcon.",
-  "version": "0.0.6",
-  "homepage": "https://github.com/takumi4ichi",
+  "version": "0.0.7",
+  "homepage": "https://github.com/CecilLee",
   "author": {
-    "name": "takumi4ichi",
-    "email": "takumi4ichi@gmail.com"
+    "name": "CecilLee",
+    "email": "cciscecil@gmail.com"
   },
   "main": "./src/jregexp.js",
   "repository": {
     "type": "git",
-    "url": "git@github.com:takumi4ichi/jregexp.git"
+    "url": "git@github.com:CecilLee/jregexp.git"
   },
   "licenses": [
     {
